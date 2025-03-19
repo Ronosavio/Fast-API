@@ -20,6 +20,12 @@ def find_post(id):
       if p['id'] == id:
          return  p
       
+def find_index(id):
+   for i , p in enumerate(my_posts):
+       if p['id'] == id:
+          return i
+       
+      
 #path operation
 @app.get("/")
 def root():
@@ -49,3 +55,22 @@ def get_post(id: int, response: Response):
       # response.status_code = status.HTTP_404_NOT_FOUND
       # return {'message': f"post with id : {id} not found"}
    return {"Post_deatail": post}
+
+@app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    index = find_index(id)
+    if index == None:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.put("/posts/{id}", status_code=status.HTTP_301_MOVED_PERMANENTLY)
+def update_post(id : int, post:Post):
+    index = find_index(id)
+    if index == None:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
+    post_dict = post.dict()
+    post_dict['id'] = id
+    my_posts[index] = post_dict
+    return {"extarcted post":f"{post_dict}"}
