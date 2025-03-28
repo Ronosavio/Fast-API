@@ -1,15 +1,26 @@
 from typing import Optional
-from fastapi import FastAPI, Response, status, HTTPException
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from . import models
+from .database import engine, sessionLocal
+from sqlalchemy.orm import Session
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+def get_db():
+    db = sessionLocal()
+    try:
+       yield db
+    finally:
+       db.close()
+       
 class Post(BaseModel):
    title: str  
    content: str
@@ -47,6 +58,10 @@ def root():
 @app.get("/login") 
 def login():
     return {"You have entered the login page"}
+
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+   return {"Ststus Success"}
  
 @app.get("/posts")
 def posts():
@@ -86,7 +101,7 @@ def delete_post(id: int):
 
 @app.put("/posts/{id}")
 def update_post(id : int, post:Post):
-    cursor.execute("""UPDATE public.posts SET title = %s, content = %s , published = %s  WHERE id = %s RETURNING *""", (post.title, post.content, post.published , (str(id)),))
+    cursor.execute("""UPDATE public.posts SET title = %s, content = %s , published = %s  WHERE id = %s RETURNING * """, (post.title, post.content, post.published , (str(id)),))
     updated_post = cursor.fetchone()
     conn.commit()
     if updated_post == None:
