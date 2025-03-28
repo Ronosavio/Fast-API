@@ -61,21 +61,26 @@ def login():
 
 @app.get("/sqlalchemy")
 def test_posts(db: Session = Depends(get_db)):
+   post = db.query(models.Post).all()
    return {"Ststus Success"}
  
 @app.get("/posts")
-def posts():
-   cursor.execute("""SELECT * FROM public.posts """)
-   posts = cursor.fetchall()
-   print(posts)
-   return {"data": posts}
+def posts(db: Session = Depends(get_db)):
+   # cursor.execute("""SELECT * FROM public.posts """)
+   # posts = cursor.fetchall()
+   post = db.query(models.Post).all()
+   return {"data": post}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
-    cursor.execute("""INSERT INTO public.posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """
-                   , (post.title, post.content, post.published))
-    new_post = cursor.fetchone()
-    conn.commit()
+def create_post(post: Post, db: Session = Depends(get_db)):
+   #  cursor.execute("""INSERT INTO public.posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """
+   #                 , (post.title, post.content, post.published))
+   #  new_post = cursor.fetchone()
+   #  conn.commit()
+    new_post = models.Post(**post.dict())
+    db.add(new_post)
+    db.commit()
+    db.refresh(new_post) # helps in retriveing or viewing the new post 
     return {"data": new_post}
  
 @app.get("/posts/{id}")
