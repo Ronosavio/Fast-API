@@ -6,26 +6,17 @@ from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from . import models
-from .database import engine, sessionLocal
+from . import models, schemas
+from .database import engine, get_db
 from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-def get_db():
-    db = sessionLocal()
-    try:
-       yield db
-    finally:
-       db.close()
+
        
-class Post(BaseModel):
-   title: str  
-   content: str
-   published : bool = True 
-   #rating: Optional[int] = None
+
 while True:
    try:
       conn = psycopg2.connect(host = 'localhost', database= 'postgres', user = 'postgres', password = '1234', cursor_factory=RealDictCursor)
@@ -58,11 +49,6 @@ def root():
 @app.get("/login") 
 def login():
     return {"You have entered the login page"}
-
-@app.get("/sqlalchemy")
-def test_posts(db: Session = Depends(get_db)):
-   post = db.query(models.Post).all()
-   return {"Ststus Success"}
  
 @app.get("/posts")
 def posts(db: Session = Depends(get_db)):
@@ -72,7 +58,7 @@ def posts(db: Session = Depends(get_db)):
    return {"data": post}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: Session = Depends(get_db)):
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
    #  cursor.execute("""INSERT INTO public.posts(title, content, published) VALUES (%s, %s, %s) RETURNING * """
    #                 , (post.title, post.content, post.published))
    #  new_post = cursor.fetchone()
@@ -84,9 +70,10 @@ def create_post(post: Post, db: Session = Depends(get_db)):
     return {"data": new_post}
  
 @app.get("/posts/{id}")
-def get_post(id: int):
-   cursor.execute("""SELECT * FROM public.posts WHERE id = %s""", (str(id)))
-   post = cursor.fetchone()
+def get_post(id: int, db: Session = Depends(get_db) ):
+   # cursor.execute("""SELECT * FROM public.posts WHERE id = %s""", (str(id)))
+   # post = cursor.fetchone()
+   post = db.query(models.Post).filter(models.Post.id == id).first()
    if not post:
       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                           detail=f"post with id:{id} not found")
@@ -95,21 +82,30 @@ def get_post(id: int):
    return {"Post_deatail": post}
 
 @app.delete("/posts/{id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    cursor.execute("""DELETE FROM public.posts WHERE id = %s RETURNING * """, (str(id)),)
-    del_post  = cursor.fetchone()
-    conn.commit()
-    if del_post == None:
+def delete_post(id: int, db: Session = Depends(get_db)):
+   #  cursor.execute("""DELETE FROM public.posts WHERE id = %s RETURNING * """, (str(id)),)
+   #  del_post  = cursor.fetchone()
+   #  conn.commit()
+    del_post = db.query(models.Post).filter(models.Post.id == id)
+    if del_post.first() == None:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
+    del_post.delete(synchronize_session = False)
+    db.commit()
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/posts/{id}")
-def update_post(id : int, post:Post):
-    cursor.execute("""UPDATE public.posts SET title = %s, content = %s , published = %s  WHERE id = %s RETURNING * """, (post.title, post.content, post.published , (str(id)),))
-    updated_post = cursor.fetchone()
-    conn.commit()
-    if updated_post == None:
+def update_post(id : int, updated_post: schemas.PostCreate, db: Session = Depends(get_db)):
+   #  cursor.execute("""UPDATE public.posts SET title = %s, content = %s , published = %s  WHERE id = %s RETURNING * """, (post.title, post.content, post.published , (str(id)),))
+   #  updated_post = cursor.fetchone()
+   #  conn.commit()
+    query_post = db.query(models.Post).filter(models.Post.id == id)
+    post = query_post.first()
+    if post == None:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
+   
+    query_post.update(updated_post.dict(), synchronize_session = False)
+    db.commit()
     
-    return {"data": updated_post}
+    return {"data": query_post.first()}
