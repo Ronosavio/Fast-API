@@ -12,7 +12,7 @@ router = APIRouter(
 )
 #, user_id: int = Depends(o_authent2.get_current_user)):
 @router.get("/", response_model= List[schemas.Post])
-def posts(db: Session = Depends(get_db), user_id: int = Depends(o_authent2.get_current_user)):
+def posts(db: Session = Depends(get_db), current_user: int = Depends(o_authent2.get_current_user)):
    # cursor.execute("""SELECT * FROM public.posts """)
    # posts = cursor.fetchall()
    post = db.query(models.Post).all()
@@ -24,8 +24,8 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db), current
    #                 , (post.title, post.content, post.published))
    #  new_post = cursor.fetchone()
    #  conn.commit()
-    print(current_user.email)
-    new_post = models.Post(**post.dict())
+    
+    new_post = models.Post(owner_id = current_user.id,**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post) # helps in retriveing or viewing the new post 
@@ -50,8 +50,13 @@ def delete_post(id: int, db: Session = Depends(get_db),current_user: int = Depen
    #  del_post  = cursor.fetchone()
    #  conn.commit()
     del_post = db.query(models.Post).filter(models.Post.id == id)
+    post = del_post.first()
     if del_post.first() == None:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
+    
+    if post.owner_id != current_user.id:
+       raise HTTPException(status_code= status.HTTP_403_FORBIDDEN, detail= "Not authorized to perform  the requested action ")
+    
     del_post.delete(synchronize_session = False)
     db.commit()
     
@@ -67,7 +72,10 @@ def update_post(id : int, updated_post: schemas.PostCreate, db: Session = Depend
     post = query_post.first()
     if post == None:
        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'The post with id:{id} does not exist')
-   
+    
+    if post.owner_id != current_user.id:
+       raise(HTTPException(status_code= status.HTTP_403_FORBIDDEN, detail = "Forbidden to perform this operation"))
+    
     query_post.update(updated_post.dict(), synchronize_session = False)
     db.commit()
     
