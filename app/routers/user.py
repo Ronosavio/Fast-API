@@ -3,6 +3,7 @@ from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from .. database import get_db
 
+# handles all the Api operations for the user table 
 router = APIRouter(
     prefix="/users",
     tags= ['Users']

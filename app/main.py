@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 from .routers import post, user, auth
 
 models.Base.metadata.create_all(bind=engine)
-
+#The main file that we run where everything is connected with the help of routers
+# (The APIRouter  from fastapi helps in this process which is found in the post , auth and user  python file)
 app = FastAPI()
 
 

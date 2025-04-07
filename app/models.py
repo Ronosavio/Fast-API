@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, text
 from .database import Base
 
+# the model of our table designed using python for our data base 
 class Post(Base):
     __tablename__ = "posts"
     id = Column(Integer, primary_key = True, nullable = False)

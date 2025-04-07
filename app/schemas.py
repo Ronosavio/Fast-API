@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
-
+# this makes sure the format we send or recieve data is maintained without causing any datatype mismatch 
+# Also making sure only the rquired fields are sent back as respone to the user
 class PostBase(BaseModel):
     title : str
     content: str

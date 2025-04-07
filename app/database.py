@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+# Credentials to connect with the databse postgres (ORM for our api to interact with the database)
 
                            #'postgresql://<username>:<password>@<ip-address/hostname>/<database_name>'
 SQL_ALCHEMY_DATABASE_URL = 'postgresql://postgres:1234@localhost/postgres'

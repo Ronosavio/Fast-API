@@ -1,3 +1,4 @@
+#checks for the login authentication ie username and password . if match is found then a toekn is generated for that user 
 from fastapi import APIRouter, Depends, status, HTTPException, Response
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -5,7 +6,7 @@ from .. import o_authent2, schemas, models, utils, database
 
 router = APIRouter(tags=['Authentication'])
 
-@router.post("/login")
+@router.post("/login", response_model= schemas.Token)
 def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     user = db.query(models.User).filter(models.User.email == user_credentials.username).first()
     if not user:
