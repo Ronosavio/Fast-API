@@ -1,3 +1,45 @@
-__pycache__
-\myvenv
-.evn
+# === Python ===
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# === Virtual Environment ===
+myvenv/
+venv/
+env/
+
+# === Environment Variables ===
+.env
+
+# === VS Code Settings ===
+.vscode/
+
+# === OS-specific files ===
+.DS_Store
+Thumbs.db
+
+# === Pytest Cache ===
+.pytest_cache/
+
+# === Mypy Cache ===
+.mypy_cache/
+
+# === Coverage Reports ===
+htmlcov/
+.coverage
+.coverage.*
+
+# === Logs ===
+*.log
+
+# === SQLite DBs or other test dbs ===
+*.sqlite3
+
+# === IDEs ===
+.idea/
+*.iml
