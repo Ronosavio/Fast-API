@@ -16,7 +16,6 @@ def posts(db: Session = Depends(get_db), current_user: int = Depends(o_authent2.
           Limit:int = 10, skip:int = 0, search: Optional[str]= ""):
    # cursor.execute("""SELECT * FROM public.posts """)
    # posts = cursor.fetchall()
-   print(Limit)
    post = db.query(models.Post).filter(models.Post.title.contains(search)).limit(Limit).offset(skip).all()
    return  post
 
